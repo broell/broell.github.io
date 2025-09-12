@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gelato Lover's Review</title>
+  <meta name="description" content="An opinionated gelato guide with detailed shop reviews, flavor notes, and practical tips." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🍨</text></svg>">
+  <style>
+    :root {
+      --bg: #0b0e11;
+      --surface: #12161c;
+      --muted-surface: #0f1318;
+      --text: #e7edf5;
+      --muted: #a9b7c6;
+      --accent: #89f0d0;
+      --accent-2: #ffd166;
+      --bad: #ff6b6b;
+      --good: #7bd88f;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    .light {
+      --bg: #fafafb;
+      --surface: #ffffff;
+      --muted-surface: #f3f5f7;
+      --text: #1b2430;
+      --muted: #516479;
+      --accent: #0fb;
+      --accent-2: #ffb703;
+      --bad: #e11d48;
+      --good: #16a34a;
+      --shadow: 0 12px 24px rgba(16,24,40,.08);
+    }
+    * { box-sizing: border-box }
+    html, body { height: 100% }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      letter-spacing: .2px;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    header.hero {
+      position: relative; overflow: hidden; border-radius: var(--radius);
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(137,240,208,.25), transparent 40%),
+                  radial-gradient(1200px 600px at 110% 10%, rgba(255,209,102,.2), transparent 40%),
+                  linear-gradient(180deg, var(--muted-surface), var(--surface));
+      box-shadow: var(--shadow);
+    }
+    .hero-inner { display: grid; grid-template-columns: 1.2fr .8fr; gap: 28px; padding: 40px; align-items: center; }
+    @media (max-width: 900px){ .hero-inner { grid-template-columns: 1fr; } }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 44px); line-height: 1.15; }
+    .subtitle { color: var(--muted); margin: 0 0 8px; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: rgba(137,240,208,.15); color: var(--accent); font-weight: 600; }
+
+    .toolbar {
+      margin-top: 18px; display: flex; flex-wrap: wrap; gap: 12px;
+    }
+    .toolbar .control { background: var(--muted-surface); border: 1px solid rgba(255,255,255,.06); color: var(--text); padding: 10px 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow);
+    }
+    .toolbar input, .toolbar select { border: none; outline: none; background: transparent; color: inherit; font: inherit; min-width: 0; }
+    .toolbar input[type="range"] { accent-color: var(--accent-2); }
+	
+	/* Custom dropdown styling */
+	.toolbar select {
+		background: var(--muted-surface);
+		border: 1px solid rgba(255,255,255,.12);
+		color: var(--text);
+		border-radius: 8px;
+		padding: 6px 10px;
+		appearance: none;
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23a9b7c6' d='M7 10l5 5 5-5z'/></svg>");
+		background-repeat: no-repeat;
+		background-position: right 10px center;
+		background-size: 14px;
+		padding-right: 28px;
+	}
+	.light .toolbar select {
+		background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23516479' d='M7 10l5 5 5-5z'/></svg>");
+	}
+
+    .toggle {
+      margin-left: auto; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; padding: 10px 12px; border-radius: 12px; background: var(--muted-surface); border: 1px solid rgba(255,255,255,.06); box-shadow: var(--shadow);
+    }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 28px 0; }
+    @media (max-width: 1100px){ .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 680px){ .grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,.06); display: flex; flex-direction: column; }
+    .thumb { position: relative; aspect-ratio: 16/9; overflow: hidden; background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.35)), url('') center/cover no-repeat; }
+    .thumb::after { content: ""; position: absolute; inset: 0; background: radial-gradient(80% 60% at 50% 20%, rgba(255,255,255,.05), transparent 60%); }
+
+    .content { padding: 16px; display: grid; gap: 10px; }
+    .title { font-weight: 700; font-size: 18px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 14px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag { font-size: 12px; padding: 6px 10px; border-radius: 999px; background: var(--muted-surface); border: 1px dashed rgba(255,255,255,.10); }
+    .row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+
+    .stars { --s: 18px; display: inline-grid; grid-auto-flow: column; gap: 2px; }
+    .stars span { width: var(--s); height: var(--s); mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>') center/contain no-repeat; background: #333; display: inline-block; }
+    .stars span.full { background: var(--accent-2); }
+    .stars span.half { background: linear-gradient(90deg, var(--accent-2) 50%, #333 50%); }
+
+    .pill { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .pill.good { background: rgba(123,216,143,.15); color: var(--good); border: 1px solid rgba(123,216,143,.35); }
+    .pill.bad { background: rgba(255,107,107,.10); color: var(--bad); border: 1px solid rgba(255,107,107,.35); }
+
+    .footer { display: grid; gap: 6px; padding: 14px 16px 18px; border-top: 1px dashed rgba(255,255,255,.08); background: linear-gradient(180deg, transparent, rgba(0,0,0,.04)); }
+    .footer .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; color: var(--muted); }
+    .footer .kv div { display: flex; justify-content: space-between; }
+
+    .empty { text-align: center; color: var(--muted); padding: 28px; border: 1px dashed rgba(255,255,255,.12); border-radius: var(--radius); background: var(--muted-surface); }
+
+    .section-title { display: flex; align-items: center; justify-content: space-between; margin: 36px 0 8px; }
+    .section-title h2 { margin: 0; font-size: 20px; }
+    .help { color: var(--muted); font-size: 14px; }
+
+    .credits { text-align: center; color: var(--muted); font-size: 13px; margin: 32px 0 12px; }
+    .btn { cursor: pointer; background: var(--accent); color: #0a0a0a; border: none; border-radius: 12px; padding: 10px 14px; font-weight: 700; box-shadow: var(--shadow); }
+    .btn.secondary { background: var(--muted-surface); color: var(--text); border: 1px solid rgba(255,255,255,.08); font-weight: 600; }
+    a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+	.thumb {
+		width: 100%;
+		height: 180px;
+		border-radius: 12px;
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
+		object-fit: cover;
+	}
+	
+	@media (min-width: 640px) {
+		.thumb {
+			height: 200px;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.thumb {
+			height: 240px;
+		}
+	}
+	
+    .pros-cons {
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .pros-cons strong {
+      display: block;
+      margin: 6px 0 2px;
+    }
+    .pros-cons div {
+      margin-left: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <header class="hero" aria-label="Gelato Lover's Review">
+      <div class="hero-inner">
+        <div>
+          <span class="badge">🍨 Gelato Lover's Review</span>
+          <h1>My Opinionated Guide to Outstanding Gelato</h1>
+          <p class="subtitle">Texture first, balanced sweetness, and honest queues. Curated notes on shops I've visited, with practical tips and flavor highlights.</p>
+          <div class="toolbar" role="group" aria-label="Filters and tools">
+            <label class="control" title="Search by shop or flavor">
+              <span>🔎</span>
+              <input id="q" type="search" placeholder="Search shops or flavors…" aria-label="Search" />
+            </label>
+            <label class="control" title="Filter by city">
+              <span>📍</span>
+              <select id="city">
+                <option value="">All cities</option>
+              </select>
+            </label>
+            <label class="control" title="Minimum rating">
+              <span>⭐</span>
+              <input id="minRating" type="range" min="0" max="5" step="0.5" value="0" aria-label="Minimum rating"/>
+              <span id="minRatingVal" aria-live="polite">0+</span>
+            </label>
+            <label class="control" title="Sort results">
+              <span>↕️</span>
+              <select id="sort">
+                <option value="rating-desc">Top rated</option>
+                <option value="name-asc">Name A–Z</option>
+                <option value="price-asc">Price (low)</option>
+                <option value="queue-asc">Shortest queue</option>
+              </select>
+            </label>
+            <label class="toggle" id="modeToggle" role="button" aria-pressed="false" aria-label="Toggle light/dark">
+              <span>🌓</span><span>Theme</span>
+            </label>
+          </div>
+        </div>
+        <div>
+          <figure class="card" style="height:100%;">
+            <div class="thumb" style="background-image:url('https://i0.wp.com/cms.babbel.news/wp-content/uploads/2019/03/italian_gelato.jpg');"></div>
+            <figcaption class="content">
+              <div class="row">
+                <strong class="title">Methodology</strong>
+                <a class="btn secondary" href="#method">View</a>
+              </div>
+              <p class="subtitle">Ratings emphasize <em>elastic, fine</em> texture, judicious sweetness, distinct flavor expression, and value. Vegan and nut-allergy notes where relevant.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </header>
+
+    <div class="section-title">
+      <h2>Featured Shops</h2>
+      <p class="help">Use the controls above to search, filter, and sort.</p>
+    </div>
+
+    <div id="cards" class="grid" aria-live="polite"></div>
+    <div id="empty" class="empty" hidden>No results. Try widening your filters.</div>
+
+    <section id="method" class="card" style="margin-top: 10px;">
+      <div class="content">
+        <h2 style="margin:0">Rating Method (TL;DR)</h2>
+        <ul style="margin:8px 0 0 18px">
+          <li><strong>Texture (40%)</strong> — ultra-smooth, elastic melt; no ice shards; clean finish.</li>
+          <li><strong>Flavor (30%)</strong> — clear primary notes; natural ingredients; balanced sweetness.</li>
+          <li><strong>Technique (15%)</strong> — temperature, overrun control, consistency across flavors.</li>
+          <li><strong>Value (15%)</strong> — price, portion size, queue time, hospitality.</li>
+        </ul>
+      </div>
+      <div class="footer">
+        <div class="kv">
+          <div><span>Legend: </span><span>💲 price · ⏱ queue</span></div>
+          <div><span>Diet tags: </span><span>🌱 vegan · 🥜 contains nuts</span></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="credits">Built as a single‑file webpage. Duplicate and update the data section to add shops.</p>
+  </div>
+
+  <script>
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+    const data = [
+      {
+        name: "Gelateria Aurora",
+        city: "Florence",
+        rating: 4.8,
+        price: 2,
+        queue: 2,
+        tags: ["classic", "artisan"],
+        diet: ["🥜"],
+        highlight: ["Pistachio di Bronte", "Crema Fiorentina"],
+        notes: "Supple, elastic texture; pistachio reads savory-nutty with lingering finish.",
+        pros: ["Impeccable texture", "Balanced sweetness"],
+        cons: ["Small seating area"],
+        image: "https://www.allrecipes.com/thmb/xfjpNQZF9hEBmWWpvRg8APzMnKg=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/55609-gelato-VAT-001-4x3-6ad4be6fef72482d974ef6753ce635c2.jpg"
+      },
+      {
+        name: "Latte & Luna",
+        city: "Rome",
+        rating: 4.6,
+        price: 3,
+        queue: 3,
+        tags: ["experimental"],
+        diet: ["🌱"],
+        highlight: ["Sesame & Honey", "Dark Chocolate 70%"],
+        notes: "Bolder flavors; sesame gelato is nuanced, not pasty. Vegan chocolate surprisingly creamy.",
+        pros: ["Inventive flavors", "Vegan options"],
+        cons: ["Inconsistent scooping temp"],
+        image: "https://www.thedeliciouscrescent.com/wp-content/uploads/2020/10/Mango-Gelato-5.jpg"
+      },
+      {
+        name: "Caffè Neve",
+        city: "Milan",
+        rating: 4.2,
+        price: 2,
+        queue: 1,
+        tags: ["classic"],
+        diet: [],
+        highlight: ["Stracciatella", "Hazelnut"],
+        notes: "Lighter body; stracciatella shards are thin and melt fast; hazelnut is clean and toasty.",
+        pros: ["Short lines", "Great value"],
+        cons: ["Slightly airy overrun"],
+        image: "https://emmaduckworthbakes.com/wp-content/uploads/2023/06/Chocolate-Gelato-Recipe.jpg"
+      },
+      {
+        name: "Sorso Freddo",
+        city: "New York",
+        rating: 4.7,
+        price: 4,
+        queue: 4,
+        tags: ["classic", "artisan"],
+        diet: ["🥜"],
+        highlight: ["Pistachio", "Lemon sorbetto"],
+        notes: "Dense but silk-smooth; lemon sorbetto is bright without harsh acidity.",
+        pros: ["Silky mouthfeel", "Excellent sorbetto"],
+        cons: ["Peak-hour queues"],
+        image: "https://www.watermelon.org/wp-content/uploads/2021/05/WATERMELON-GELATO-017-1x1-1.jpg"
+      },
+      {
+        name: "Nocciola & Co.",
+        city: "Turin",
+        rating: 4.9,
+        price: 3,
+        queue: 2,
+        tags: ["classic"],
+        diet: ["🥜"],
+        highlight: ["Gianduja", "Milk & Honey"],
+        notes: "Benchmark gianduja: deep cocoa + roasted PGI hazelnut; ultra-fine ice crystal structure.",
+        pros: ["Benchmark hazelnut", "Consistent texture"],
+        cons: ["Touristy area"],
+        image: "https://www.goodlifeeats.com/wp-content/uploads/2022/06/Strawberry-Gelato-Recipe-735x951.jpg"
+      },
+      {
+        name: "Crema & Sea",
+        city: "Barcelona",
+        rating: 4.3,
+        price: 2,
+        queue: 3,
+        tags: ["experimental", "artisan"],
+        diet: ["🌱"],
+        highlight: ["Olive Oil & Citrus", "Almond Milk Chocolate"],
+        notes: "Olive oil gelato is glossy with silky melt; citrus weave is deft; vegan base well-emulsified.",
+        pros: ["Refined flavors", "Vegan done right"],
+        cons: ["Crowded promenade"],
+        image: "https://www.savorysimple.net/wp-content/uploads/2014/02/1-Savory-Simple-Recipe-Vanilla-Milk-Gelato-045.jpg"
+      },
+	  {
+		  name: "Gelato Verde",
+		  city: "Bologna",
+		  rating: 4.5,
+		  price: 2,
+		  queue: 2,
+		  tags: ["classic", "artisan"],
+		  diet: ["🌱"],
+		  highlight: ["Pistachio Verde", "Ricotta & Fig"],
+		  notes: "Balanced dairy base; pistachio is grassy-fresh; ricotta gelato has delicate grain with sweet fig ripple.",
+		  pros: ["Authentic local flavors", "Affordable pricing"],
+		  cons: ["Limited flavors per day"],
+		  image: "https://www.tasteofhome.com/wp-content/uploads/2018/01/Strawberry-Gelato_EXPS_TOHAM25_212175_P2_MD_04_18_7b.jpg"
+		},
+		{
+		  name: "Dolce Neve",
+		  city: "Austin",
+		  rating: 4.4,
+		  price: 3,
+		  queue: 2,
+		  tags: ["experimental", "artisan"],
+		  diet: [],
+		  highlight: ["Avocado Lime", "Coconut Stracciatella"],
+		  notes: "Creative but well-executed; avocado gelato has buttery texture lifted by lime; coconut flakes add crunch.",
+		  pros: ["Adventurous flavors", "Friendly staff"],
+		  cons: ["Small portion sizes"],
+		  image: "https://yourguardianchef.com/wp-content/uploads/2023/02/Italian-Gelato-Recipe-Vanilla-Chocolate-and-Pistachios-1.jpg"
+		},
+		{
+		  name: "Gelateria Santa Lucia",
+		  city: "Venice",
+		  rating: 4.7,
+		  price: 3,
+		  queue: 3,
+		  tags: ["classic"],
+		  diet: [],
+		  highlight: ["Zabaglione", "Tiramisu"],
+		  notes: "Eggy zabaglione is rich but not heavy; tiramisu swirls integrate espresso and cocoa harmoniously.",
+		  pros: ["Authentic Venetian vibe", "Deep, layered flavors"],
+		  cons: ["Often crowded with tourists"],
+		  image: "https://www.marcellinaincucina.com/wp-content/uploads/2024/02/mango-gelato-featured-1.jpg"
+		},
+		{
+		  name: "Fior di Latte",
+		  city: "Naples",
+		  rating: 4.6,
+		  price: 2,
+		  queue: 1,
+		  tags: ["classic"],
+		  diet: ["🥜"],
+		  highlight: ["Hazelnut PGI", "Lemon Basil"],
+		  notes: "Silky dairy structure; hazelnut shows toasted depth; lemon basil is zesty with herbal lift.",
+		  pros: ["Great balance of flavors", "Quick service"],
+		  cons: ["Limited indoor seating"],
+		  image: "https://www.tasteofhome.com/wp-content/uploads/2024/07/EXPS_TOHD24_35621_AlejandroMonfort_11.jpg"
+		},
+		{
+		  name: "Amorino",
+		  city: "Paris",
+		  rating: 4.3,
+		  price: 4,
+		  queue: 3,
+		  tags: ["classic", "chain"],
+		  diet: ["🌱"],
+		  highlight: ["Rose-shaped cones", "Amarena Cherry"],
+		  notes: "Consistent across branches; amarena cherry syrup is punchy; presentation is signature floral scoop.",
+		  pros: ["Beautiful presentation", "Vegan sorbets available"],
+		  cons: ["Chain-like experience"],
+		  image: "https://www.allrecipes.com/thmb/kJLqDp_BoYnK439zf6I8IjBndfo=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/274105_italian-crema-ice-cream-gelato-alla-crema-4x3-be3a8db0f706433681b1409bce043a34.jpg"
+		},
+		{
+		  name: "Carapina",
+		  city: "Florence",
+		  rating: 4.8,
+		  price: 3,
+		  queue: 2,
+		  tags: ["artisan", "experimental"],
+		  diet: [],
+		  highlight: ["Pear & Gorgonzola", "Dark Chocolate"],
+		  notes: "Cheese gelato done right—gorgonzola gelato is savory but balanced by sweet pear; chocolate is dense and glossy.",
+		  pros: ["High creativity", "Seasonal ingredients"],
+		  cons: ["Not all flavors appeal to everyone"],
+		  image: "https://i0.wp.com/www.weaversorchard.com/wp-content/uploads/2019/06/Frutti-Di-Bosco-Gelato-1000.jpg?fit=1000%2C666&ssl=1"
+		},
+		{
+		  name: "Il Gelato di San Crispino",
+		  city: "Rome",
+		  rating: 4.7,
+		  price: 4,
+		  queue: 2,
+		  tags: ["classic", "artisan"],
+		  diet: [],
+		  highlight: ["Honey", "Whipped Cream Gelato"],
+		  notes: "Famous for honey gelato with complex floral tones; base is creamy but not cloying.",
+		  pros: ["Unique honey flavor", "Iconic Roman gelateria"],
+		  cons: ["Premium pricing"],
+		  image: "https://i0.wp.com/www.kitchen-concoctions.com/wp-content/uploads/2019/07/Fresh-Mint-Stracciatella-Gelato-picture.jpg?fit=680%2C1027&ssl=1"
+		},
+		{
+		  name: "Gelato Messina",
+		  city: "Sydney",
+		  rating: 4.9,
+		  price: 3,
+		  queue: 4,
+		  tags: ["experimental", "artisan"],
+		  diet: ["🌱"],
+		  highlight: ["Salted Caramel & White Chocolate", "Mango Sorbet"],
+		  notes: "Playful yet polished; salted caramel base with chunks of white chocolate; sorbet intense and juicy.",
+		  pros: ["Huge rotating menu", "Vegan sorbets"],
+		  cons: ["Long waits in evenings"],
+		  image: "https://delishglobe.com/wp-content/uploads/2024/09/Gelato-1.png"
+		},
+		{
+		  name: "Sicilia Gelato",
+		  city: "Palermo",
+		  rating: 4.6,
+		  price: 2,
+		  queue: 2,
+		  tags: ["classic"],
+		  diet: ["🥜"],
+		  highlight: ["Cannoli Cream", "Almond Granita"],
+		  notes: "Cannoli cream gelato dense with ricotta richness; almond granita is coarse but refreshing.",
+		  pros: ["Authentic Sicilian flavors", "Good value"],
+		  cons: ["Rustic presentation"],
+		  image: "https://www.scotchandscones.com/wp-content/uploads/2022/06/caramel-swirl-almond-gelato-two-scoops-square.jpg"
+		},
+		{
+		  name: "Bianco Latte",
+		  city: "Milan",
+		  rating: 4.4,
+		  price: 3,
+		  queue: 2,
+		  tags: ["classic", "cafe"],
+		  diet: [],
+		  highlight: ["Coffee Gelato", "Milk Cream"],
+		  notes: "Known for gelato + café hybrid; coffee gelato is punchy; plain milk flavor surprisingly nuanced.",
+		  pros: ["Great coffee pairings", "Relaxed atmosphere"],
+		  cons: ["Slightly pricey for portions"],
+		  image: "https://italianchef.com/wp-content/uploads/2016/07/ChocolateGelato.jpg"
+		}
+	];
+
+    const cities = [...new Set(data.map(d => d.city))].sort();
+    const citySel = document.getElementById('city');
+    cities.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; citySel.appendChild(o); });
+
+    function starEls(r){
+      const stars = [];
+      for (let i=1; i<=5; i++){
+        const diff = r - i + 1; // portion of star filled
+        let cls = '';
+        if (diff >= 1) cls = 'full';
+        else if (diff >= .5) cls = 'half';
+        stars.push(`<span class="${cls}" aria-hidden="true"></span>`);
+      }
+      return `<span class="sr-only">${r} out of 5</span><div class="stars" aria-hidden="true">${stars.join('')}</div>`;
+    }
+
+    function tagSpans(tags){ return tags.map(t => `<span class="tag">${t}</span>`).join(''); }
+
+    function render(list){
+      const grid = document.getElementById('cards');
+      grid.innerHTML = '';
+      if (!list.length){ document.getElementById('empty').hidden = false; return; }
+      document.getElementById('empty').hidden = true;
+
+      list.forEach(d => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.setAttribute('aria-label', `${d.name} review card`);
+        card.innerHTML = `
+          <div class="thumb" style="background-image: url('${d.image.replace(/'/g, "%27")}');"></div>
+          <div class="content">
+            <div class="row">
+              <div class="title">${d.name}</div>
+              <div>${starEls(d.rating)}</div>
+            </div>
+            <div class="meta">
+              <span>📍 ${d.city}</span>
+              <span title="price"><strong>💲</strong> ${d.price}/5</span>
+              <span title="queue"><strong>⏱</strong> ${d.queue}/5</span>
+            </div>
+            <div class="tags">${tagSpans(d.tags)} ${d.diet.join(' ')}</div>
+            <p>${d.notes}</p>
+            <div class="row">
+              <div class="tags">${d.highlight.map(h => `<span class="tag">★ ${h}</span>`).join('')}</div>
+              <div class="tags">
+                ${d.pros.length ? `<span class="pill good">+ ${d.pros[0]}</span>`: ''}
+                ${d.cons.length ? `<span class="pill bad">− ${d.cons[0]}</span>`: ''}
+              </div>
+            </div>
+          </div>
+          <div class="footer">
+            <div class="kv">
+              <div><span>Pros:<br>${d.pros.join('<br>') || '—'}</span></div>
+              <div><span>Cons:<br>${d.cons.join('<br>') || '—'}</span></div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function applyFilters(){
+      const q = $('#q').value.trim().toLowerCase();
+      const city = $('#city').value;
+      const minR = parseFloat($('#minRating').value || '0');
+      const [sortKey, sortDir] = $('#sort').value.split('-');
+
+      let list = data.filter(d => {
+        const hay = [d.name, d.city, ...(d.highlight||[]), (d.notes||'')].join(' ').toLowerCase();
+        const matchesQ = !q || hay.includes(q);
+        const matchesCity = !city || d.city === city;
+        const matchesRating = d.rating >= minR;
+        return matchesQ && matchesCity && matchesRating;
+      });
+
+      list.sort((a, b) => {
+        const dir = sortDir === 'asc' ? 1 : -1;
+        if (sortKey === 'rating') return dir * (a.rating - b.rating);
+        if (sortKey === 'name') return dir * a.name.localeCompare(b.name);
+        if (sortKey === 'price') return dir * (a.price - b.price);
+        if (sortKey === 'queue') return dir * (a.queue - b.queue);
+        return 0;
+      });
+
+      render(list);
+    }
+
+    // Event wiring
+    ['q','city','minRating','sort'].forEach(id => {
+      document.getElementById(id).addEventListener('input', e => {
+        if (id === 'minRating') document.getElementById('minRatingVal').textContent = e.target.value + '+';
+        applyFilters();
+      });
+      document.getElementById(id).addEventListener('change', applyFilters);
+    });
+
+    // Theme toggle with localStorage
+    const root = document.documentElement;
+    const modeToggle = document.getElementById('modeToggle');
+    const saved = localStorage.getItem('gelato-theme') || 'dark';
+    if (saved === 'light') root.classList.add('light');
+    modeToggle.setAttribute('aria-pressed', saved === 'light');
+    modeToggle.addEventListener('click', () => {
+      root.classList.toggle('light');
+      const isLight = root.classList.contains('light');
+      localStorage.setItem('gelato-theme', isLight ? 'light' : 'dark');
+      modeToggle.setAttribute('aria-pressed', isLight);
+    });
+
+    // Initial render
+    document.getElementById('minRatingVal').textContent = document.getElementById('minRating').value + '+';
+    applyFilters();
+  </script>
+</body>
+</html>
