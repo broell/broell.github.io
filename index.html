@@ -1,569 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>From Conference Badge to Remote Keystroke Injector | Hardware Hacking</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CAPTAIN Developer Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
-
-  :root {
-    --bg: #0d0f0e;
-    --surface: #141817;
-    --surface2: #1c211f;
-    --accent: #39ff7e;
-    --accent2: #00c9ff;
-    --warn: #ff6b35;
-    --text: #d4ddd9;
-    --muted: #7a8f84;
-    --border: #2a332e;
+:root{
+  --sea:#0b2530;
+  --sea-2:#113341;
+  --paper:#e9f0ec;
+  --ink:#10242c;
+  --ink-soft:#44606a;
+  --signal:#f0b429;
+  --signal-ink:#2a1e00;
+  --kelp:#2fae8f;
+  --line:#c3d3cc;
+  --bg:#e9f0ec;
+  --panel:#f6faf8;
+  --text:#10242c;
+  --muted:#44606a;
+  --accent:#0f6b58;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b2530;--panel:#113341;--text:#e6f0ec;--muted:#9db6bb;--accent:#4fd1ae;--line:#24505f;
   }
+}
+:root[data-theme="dark"]{
+  --bg:#0b2530;--panel:#113341;--text:#e6f0ec;--muted:#9db6bb;--accent:#4fd1ae;--line:#24505f;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.6}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+.wrap{max-width:1440px;margin:0 auto;padding:0 24px}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* hero (always dark: it is the bridge) */
+.hero{background:var(--sea);color:#e6f0ec;position:relative;overflow:hidden}
+.hero .wrap{max-width:1440px;padding-top:88px;padding-bottom:96px}
+.hero h1{font-size:clamp(40px,6.2vw,104px);white-space:normal}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(44px,7.4vw,92px);line-height:.95;letter-spacing:-.03em;margin:0 0 20px}
+h1 small{display:block;font-size:.3em;font-weight:500;letter-spacing:0;line-height:1.25;color:#b9ccd0;margin-top:22px;max-width:none}
+h1 small{font-size:clamp(17px,2.1vw,30px)}
+.lede{font-size:clamp(18px,1.8vw,24px);max-width:none;color:#cfdfe0;margin:0 0 36px}
+.cta-row{display:flex;flex-wrap:wrap;gap:14px}
+.btn{display:inline-block;font-family:var(--display);font-weight:700;font-size:17px;padding:14px 24px;border-radius:6px;text-decoration:none;border:2px solid transparent;cursor:pointer}
+.btn-primary{background:var(--signal);color:var(--signal-ink)}
+.btn-primary:hover{background:#ffc94a}
+.btn-ghost{border-color:#4a7380;color:#e6f0ec}
+.btn-ghost:hover{border-color:#e6f0ec}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Lora', Georgia, serif;
-    font-size: 18px;
-    line-height: 1.8;
-    min-height: 100vh;
-  }
 
-  /* Scanline overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.03) 2px,
-      rgba(0,0,0,0.03) 4px
-    );
-    pointer-events: none;
-    z-index: 1000;
-  }
+/* sections */
+section{padding:72px 0}
+h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,4.4vw,46px);line-height:1.05;letter-spacing:-.02em;margin:0 0 16px;max-width:none}
+.sub{color:var(--muted);max-width:none;font-size:clamp(17px,1.5vw,20px);margin:0 0 40px}
 
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 1.5rem 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    position: sticky;
-    top: 0;
-    background: rgba(13,15,14,0.92);
-    backdrop-filter: blur(12px);
-    z-index: 100;
-  }
+/* kit: two included items */
+.kit{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.item{background:var(--panel);border:2px solid var(--text);border-radius:4px;padding:32px;display:flex;flex-direction:column}
+.item h3{font-family:var(--display);font-size:26px;line-height:1.1;margin:0 0 10px}
+.item p{margin:0 0 20px;color:var(--muted)}
+.item ul{margin:0 0 28px;padding-left:20px}
+.item li{margin-bottom:6px}
+.item .btn{margin-top:auto;align-self:flex-start}
+.btn-dark{background:var(--text);color:var(--bg)}
+.btn-dark:hover{background:var(--accent);color:var(--sea)}
+.item .fine{font-size:14px;margin:12px 0 0;color:var(--muted)}
 
-  .site-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--accent);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    border: 1px solid var(--accent);
-    padding: 0.2rem 0.6rem;
-    border-radius: 2px;
-  }
+/* route / syllabus: real sequence, so numbered legs */
+.route{list-style:none;margin:0;padding:0;border-left:3px solid var(--accent);margin-left:8px}
+.route li{position:relative;padding:0 0 34px 36px}
+.route li::before{content:"";position:absolute;left:-11px;top:6px;width:19px;height:19px;border-radius:50%;background:var(--bg);border:3px solid var(--accent)}
+.route li:last-child{padding-bottom:0}
+.route .leg{font-family:var(--display);font-weight:700;font-size:15px;color:var(--accent)}
+.route h3{font-family:var(--display);font-size:24px;line-height:1.15;margin:2px 0 6px}
+.route p{margin:0;color:var(--muted);max-width:none}
 
-  .breadcrumb {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-  }
+.two{display:grid;grid-template-columns:1fr 1fr;gap:48px}
+.facts{margin:0;padding:0;list-style:none}
+.facts li{padding:14px 0;border-bottom:1px solid var(--line)}
+.facts li:first-child{border-top:1px solid var(--line)}
+.facts strong{font-family:var(--display)}
 
-  .breadcrumb span { color: var(--accent); }
+.rules{background:var(--sea);color:#e6f0ec}
+.rules h2{color:#fff}
+.rules p{max-width:none;color:#cfdfe0}
+.rules .box{border:2px solid var(--signal);padding:24px 28px;border-radius:4px;max-width:none}
 
-  main {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 4rem 2rem 8rem;
-  }
+details{border-bottom:1px solid var(--line);padding:16px 0}
+details:first-of-type{border-top:1px solid var(--line)}
+summary{font-family:var(--display);font-weight:700;font-size:19px;cursor:pointer}
+details p{margin:10px 0 0;color:var(--muted);max-width:none}
 
-  .hero-meta {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
+.enroll{text-align:left}
+.enroll .box{background:var(--panel);border:2px solid var(--text);border-radius:4px;padding:40px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between}
+.enroll h2{margin:0 0 8px}
+.enroll p{margin:0;color:var(--muted)}
+#note{margin-top:18px;font-size:15px;color:var(--accent);min-height:1.4em;font-weight:600}
 
-  .category-pill {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    background: rgba(57,255,126,0.1);
-    color: var(--accent);
-    border: 1px solid rgba(57,255,126,0.3);
-    padding: 0.25rem 0.75rem;
-    border-radius: 2px;
-  }
+footer{padding:36px 0 48px;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
 
-  .date {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-
-  h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: #fff;
-    margin-bottom: 1.5rem;
-  }
-
-  h1 em {
-    font-style: normal;
-    color: var(--accent);
-  }
-
-  .lede {
-    font-size: 1.15rem;
-    color: #a8bdb5;
-    line-height: 1.7;
-    border-left: 3px solid var(--accent);
-    padding-left: 1.25rem;
-    margin-bottom: 3rem;
-    font-style: italic;
-  }
-
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 3rem 0;
-    color: var(--muted);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-  }
-
-  .divider::before, .divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  h2 {
-    font-family: 'Syne', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #fff;
-    margin: 3rem 0 1rem;
-    letter-spacing: -0.01em;
-  }
-
-  h2::before {
-    content: '// ';
-    color: var(--accent);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.9rem;
-    font-weight: 400;
-  }
-
-  p {
-    margin-bottom: 1.4rem;
-    color: var(--text);
-  }
-
-  .callout {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent2);
-    padding: 1.25rem 1.5rem;
-    margin: 2.5rem 0;
-    border-radius: 0 4px 4px 0;
-  }
-
-  .callout-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent2);
-    margin-bottom: 0.5rem;
-  }
-
-  .callout p {
-    margin: 0;
-    font-size: 0.95rem;
-    color: #a8bdb5;
-  }
-
-  .warning {
-    border-left-color: var(--warn);
-  }
-
-  .warning .callout-label {
-    color: var(--warn);
-  }
-
-  code, .mono {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.85em;
-    background: var(--surface2);
-    color: var(--accent);
-    padding: 0.1em 0.4em;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-  }
-
-  .code-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 1.5rem;
-    margin: 2rem 0;
-    overflow-x: auto;
-    position: relative;
-  }
-
-  .code-block::before {
-    content: attr(data-lang);
-    position: absolute;
-    top: 0.6rem;
-    right: 0.8rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .code-block pre {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-    line-height: 1.7;
-    color: var(--text);
-    white-space: pre;
-  }
-
-  .code-block .kw { color: var(--accent2); }
-  .code-block .fn { color: var(--accent); }
-  .code-block .str { color: #ffd27d; }
-  .code-block .cm { color: var(--muted); }
-  .code-block .num { color: #ff8fa3; }
-
-  .spec-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    margin: 2rem 0;
-  }
-
-  .spec-item {
-    background: var(--surface);
-    padding: 1rem 1.25rem;
-  }
-
-  .spec-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 0.35rem;
-  }
-
-  .spec-value {
-    font-family: 'Syne', sans-serif;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--accent);
-  }
-
-  .step-list {
-    counter-reset: steps;
-    list-style: none;
-    margin: 1.5rem 0 2rem;
-  }
-
-  .step-list li {
-    counter-increment: steps;
-    padding: 1rem 1rem 1rem 3.5rem;
-    position: relative;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .step-list li:last-child { border-bottom: none; }
-
-  .step-list li::before {
-    content: counter(steps, decimal-leading-zero);
-    position: absolute;
-    left: 0.75rem;
-    top: 1rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.8rem;
-    color: var(--accent);
-    font-weight: 500;
-  }
-
-  .step-list li strong {
-    font-family: 'Syne', sans-serif;
-    color: #fff;
-    font-size: 0.95rem;
-    display: block;
-    margin-bottom: 0.2rem;
-  }
-
-  .step-list li p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-
-  blockquote {
-    border-left: 3px solid var(--warn);
-    padding-left: 1.25rem;
-    margin: 2rem 0;
-    font-style: italic;
-    color: #a8bdb5;
-  }
-
-  .tag-footer {
-    margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    background: var(--surface2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-    padding: 0.2rem 0.6rem;
-    border-radius: 2px;
-    text-transform: lowercase;
-  }
-
-  @media (max-width: 600px) {
-    .spec-grid { grid-template-columns: 1fr; }
-    main { padding: 2rem 1.25rem 5rem; }
-    h1 { font-size: 1.8rem; }
-  }
+@media (max-width:820px){
+  .hero .wrap{padding-top:48px;padding-bottom:56px}
+  .kit,.two{grid-template-columns:1fr}
+  section{padding:56px 0}
+  .item,.enroll .box{padding:24px}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <span class="site-tag">HARDWARE HACKING</span>
-  <span class="breadcrumb">/ <span>ESP32</span> / Badge Repurpose</span>
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <h1>CAPTAIN Developer Course
+        <small>(Continuous Autonomous Penetration Testing Artificial Intelligence Network)</small>
+      </h1>
+      <p class="lede">The Developer Course. Build an AI-driven agent network that keeps probing your own systems for weaknesses, around the clock, with a human at the helm.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#kit">See what's in the kit</a>
+      </div>
+    </div>
+  </div>
 </header>
 
 <main>
-  <div class="hero-meta">
-    <span class="category-pill">Penetration Testing</span>
-    <span class="date">// BUILD LOG</span>
-  </div>
-
-  <h1>From Conference Badge to <em>Remote Keystroke Injector</em></h1>
-
-  <p class="lede">
-    A free conference badge turned out to be a fully-featured ESP32S3 development board. Here's how I turned it into a Wi-Fi-controlled keystroke injection device — and what that means for physical security.
-  </p>
-
-  <div class="divider">PART ONE</div>
-
-  <h2>Unlikely Origins</h2>
-
-  <p>
-    It started with a hardware shortage. I had run out of microcontrollers and was rooting around for a project when I picked up one of those electronic conference badges we'd been given at a recent event. A closer look stopped me cold — the microcontroller on the badge was a dead ringer for a development module I already had on my bench.
-  </p>
-
-  <p>
-    Turned out they were identical: an <code>ESP32S3 WROOM-1</code>. The badge already had everything I needed to start a project right out of the box.
-  </p>
-
-  <div class="spec-grid">
-    <div class="spec-item">
-      <div class="spec-label">Microcontroller</div>
-      <div class="spec-value">ESP32-S3 WROOM-1</div>
+  <section id="kit">
+    <div class="wrap">
+      <h2>Your kit arrives with enrollment</h2>
+      <p class="sub">You get the software to start tonight and the hardware to run your agents locally.</p>
+      <div class="kit">
+        <article class="item">
+          <h3>Kali Linux, ready to download</h3>
+          <p>The course lab runs on Kali, the open-source security distribution. Download it now and set it up before day one.</p>
+          <ul>
+            <li>Installer images for PC and virtual machines</li>
+            <li>Free, with no enrollment required to download</li>
+            <li>Setup walkthrough included in Module 1</li>
+          </ul>
+          <a class="btn btn-dark" href="https://www.kali.org/get-kali/" target="_blank" rel="noopener">Download Kali Linux</a>
+          <p class="fine">Opens kali.org, the official download page.</p>
+        </article>
+        <article class="item">
+          <h3>AMD Ryzen AI Halo developer device</h3>
+          <p>Every student receives a developer device to host and test CAPTAIN agents on your own desk instead of a cloud account.</p>
+          <ul>
+            <li>Run AI models locally, on hardware you own</li>
+            <li>Keep scan data inside your lab network</li>
+            <li>Yours to keep after the course</li>
+          </ul>
+          <a class="btn btn-dark" href="#kit">Reserve a device</a>
+          <p class="fine">Shipped to enrolled students in the first week.</p>
+        </article>
+      </div>
     </div>
-    <div class="spec-item">
-      <div class="spec-label">Connectivity</div>
-      <div class="spec-value">Wi-Fi + Bluetooth</div>
-    </div>
-    <div class="spec-item">
-      <div class="spec-label">Display</div>
-      <div class="spec-value">OLED (I2C)</div>
-    </div>
-    <div class="spec-item">
-      <div class="spec-label">Interface</div>
-      <div class="spec-value">USB HID, 2x Buttons</div>
-    </div>
-    <div class="spec-item">
-      <div class="spec-label">Power</div>
-      <div class="spec-value">Onboard Battery</div>
-    </div>
-    <div class="spec-item">
-      <div class="spec-label">Key Pins Used</div>
-      <div class="spec-value">IO 8, 9, 35, 36</div>
-    </div>
-  </div>
-
-  <div class="callout">
-    <div class="callout-label">🔧 Tip</div>
-    <p>Before writing a single line of code, use the continuity/diode mode on a multimeter to trace which physical pins on the badge correspond to the OLED's SDA and SCL lines, and to your buttons. Cross-reference with the datasheet to get the actual GPIO numbers.</p>
-  </div>
-
-  <div class="divider">PART TWO</div>
-
-  <h2>Phase 1 — Hardware Password Manager</h2>
-
-  <p>
-    My original goal was simple: build a hardware password manager. Our work logins at the time required 16-character passwords with uppercase, lowercase, and special characters. Nobody was memorising those. I figured: if I can't remember 16 characters, I certainly can't remember 32 or 64 — but the ESP32 can.
-  </p>
-
-  <p>
-    The key insight is that the ESP32-S3 can masquerade as a <strong>USB HID keyboard</strong>. To the host computer, it looks exactly like a keyboard plugged into a USB port. From there the sketch logic is straightforward:
-  </p>
-
-  <ul class="step-list">
-    <li>
-      <strong>Button A — cycle entries</strong>
-      <p>Increments an index through a pre-configured array of credentials, showing the selected label on the OLED screen.</p>
-    </li>
-    <li>
-      <strong>Button B — inject selected entry</strong>
-      <p>Calls <code>Keyboard.print()</code> with the string at the current index, typing it into whatever field has focus on the host machine.</p>
-    </li>
-    <li>
-      <strong>OLED feedback</strong>
-      <p>Shows the currently selected credential name so you know which entry you're about to inject — without displaying the actual secret.</p>
-    </li>
-  </ul>
-
-  <p>
-    Getting set up is straightforward. Download the Arduino IDE, add the ESP32 board package, and pull up the USB keyboard example sketch. AI assistants like Claude or ChatGPT can generate a useful starting framework — just expect several iterations before it compiles cleanly and behaves correctly on real hardware.
-  </p>
-
-  <p>
-    You can also use Espressif's <code>esptool.py</code> to read chip metadata before flashing:
-  </p>
-
-  <div class="code-block" data-lang="bash">
-    <pre><span class="cm"># Identify chip variant and available flash</span>
-esptool.py --port /dev/ttyUSB0 --baud <span class="num">115200</span> flash_id</pre>
-  </div>
-
-  <div class="divider">PART THREE</div>
-
-  <h2>Phase 2 — Going Remote (The "Evil Keyboard")</h2>
-
-  <p>
-    Once the local password manager worked, the next question was obvious: the badge has Wi-Fi — why does someone need to physically press a button? Why not control it over the network?
-  </p>
-
-  <p>
-    The answer is what I ended up calling a <strong>remote evil keyboard</strong>. The architecture is simple but effective:
-  </p>
-
-  <ol class="step-list">
-    <li>
-      <strong>ESP32 connects to Wi-Fi</strong>
-      <p>On boot the badge joins a specified SSID and acquires an IP address.</p>
-    </li>
-    <li>
-      <strong>Async web server starts</strong>
-      <p>An ESPAsyncWebServer instance serves a minimal HTML interface on port 80. The page has a text field and a send button.</p>
-    </li>
-    <li>
-      <strong>Attacker types — victim receives</strong>
-      <p>Text submitted through the web UI is received by the ESP32 over Wi-Fi, then injected keystroke-by-keystroke via the USB HID interface into whatever application has focus on the connected computer.</p>
-    </li>
-    <li>
-      <strong>OTA updates</strong>
-      <p>ArduinoOTA is enabled, so the firmware can be updated over the air without ever touching the device physically again.</p>
-    </li>
-  </ol>
-
-  <div class="callout warning">
-    <div class="callout-label">⚠ Security Note</div>
-    <p>From the target computer's perspective, this is indistinguishable from a legitimate USB keyboard. There is no OS-level prompt, no driver installation, and no indication that the input is being injected remotely. This is precisely why physically uncontrolled USB ports on production machines are a meaningful attack surface.</p>
-  </div>
-
-  <blockquote>
-    "We can use computer A to type into computer B, and the target machine sees it as just a hardware keyboard plugged in. Nothing weird going on."
-  </blockquote>
-
-  <div class="divider">PART FOUR</div>
-
-  <h2>Miniaturisation &amp; Concealment</h2>
-
-  <p>
-    The obvious limitation of the badge form factor is that it's conspicuous. A conference badge dangling from a USB port raises questions. That's where miniaturisation comes in.
-  </p>
-
-  <p>
-    The <strong>Seeed Studio XIAO ESP32-S3</strong> is functionally equivalent to the badge's ESP32-S3, but it's roughly the size of a thumbnail. Anything the full badge can do, the XIAO can do — with a footprint small enough to conceal in a wide variety of enclosures or objects.
-  </p>
-
-  <p>
-    The same pin-tracing methodology applies: use continuity mode on a multimeter and the chip's datasheet to identify I2C (SDA/SCL) and GPIO lines. Solder on press-fit headers and you can connect peripherals like OLED screens, NFC readers, or sensor modules.
-  </p>
-
-  <div class="divider">GOING FURTHER</div>
-
-  <h2>Other Directions</h2>
-
-  <p>
-    The keystroke injector is just one application. The ESP32's combination of USB HID emulation, Wi-Fi, Bluetooth, and abundant GPIO opens up a wide range of other builds — a few others explored in this session:
-  </p>
-
-  <ul class="step-list">
-    <li>
-      <strong>Battery-powered NFC card skimmer</strong>
-      <p>An ESP32 reads NFC card UIDs and publishes them to a local web interface. Placed near a door reader, it captures card data from unsuspecting employees who assume they need to badge in. Depending on the card technology, captured data can potentially be cloned.</p>
-    </li>
-    <li>
-      <strong>Presence / heartbeat sensor</strong>
-      <p>An X-band radar module detects breathing and heartbeat through walls. Demonstrated here as a home automation trigger, but the underlying sensing capability has broader applications.</p>
-    </li>
-    <li>
-      <strong>ESPHome integration</strong>
-      <p>For less adversarial use cases, the ESP32 ecosystem integrates natively with Home Assistant via the ESPHome project — a rich source of inspiration for legitimate IoT builds.</p>
-    </li>
-  </ul>
-
-  <div class="callout">
-    <div class="callout-label">💡 Takeaway</div>
-    <p>
-      ESP32-S3 boards are inexpensive, ubiquitous, and capable. They can emulate USB keyboards, host web servers, communicate over Wi-Fi and Bluetooth, and talk to a huge range of I2C/SPI peripherals — all from a chip that can be hidden almost anywhere. If you're doing physical penetration testing, understanding this attack class is becoming table stakes.
-    </p>
-  </div>
-
-  <div class="tag-footer">
-    <span class="tag">#esp32</span>
-    <span class="tag">#hardware-hacking</span>
-    <span class="tag">#usb-hid</span>
-    <span class="tag">#keystroke-injection</span>
-    <span class="tag">#rubber-ducky</span>
-    <span class="tag">#pentest</span>
-    <span class="tag">#arduino</span>
-    <span class="tag">#iot-security</span>
-    <span class="tag">#nfc</span>
-    <span class="tag">#esphome</span>
-  </div>
+  </section>
 </main>
-
 </body>
 </html>
